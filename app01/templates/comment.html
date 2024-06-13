@@ -1,0 +1,11 @@
+<div class="comment" id="comment-{{ comment.id }}">
+    <strong>{{ comment.author.username }}</strong> <span class="text-muted">{{ comment.publish_time }}</span>
+    <p>{{ comment.content }}</p>
+    <button class="btn btn-sm btn-link" onclick="showReplyForm('{{ comment.id }}')">Reply</button>
+
+    <div class="replies">
+        {% for reply in comment.replies.all %}
+            {% include 'comment.html' with comment=reply %}
+        {% endfor %}
+    </div>
+</div>

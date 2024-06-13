@@ -6,6 +6,17 @@
     <title>{{ article.title }}</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/article_detail.css?version=1.1.2" rel="stylesheet">
+    <style>
+        .comment {
+            margin-bottom: 20px;
+        }
+        .comment .replies {
+            margin-left: 20px;
+        }
+        .reply-form {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -50,51 +61,16 @@
 
         <div class="comments-section">
             <h3>Comments</h3>
-            <div class="list-group">
+            <div id="comments">
                 {% for comment in comments %}
-                    <div class="list-group-item comment">
-                        <strong>{{ comment.author.username }}</strong> | <small class="text-muted">{{ comment.publish_time }}</small>
-                        <p class="mt-2">{{ comment.content }}</p>
-                        <button class="btn btn-sm btn-link reply-btn" data-comment-id="{{ comment.id }}">Reply</button>
-
-                        {% for reply in comment.replies.all %}
-                            <div class="list-group-item comment-reply bg-light mt-2">
-                                <strong>{{ reply.author.username }}</strong> | <small class="text-muted">{{ reply.publish_time }}</small>
-                                <p class="mt-2">{{ reply.content }}</p>
-                                <button class="btn btn-sm btn-link reply-btn" data-comment-id="{{ reply.id }}">Reply</button>
-                            </div>
-                             <div class="reply-form mt-2" id="reply-form-{{ reply.id }}" style="display: none;">
-                            <form method="POST" action="{% url 'article_detail' article.id %}">
-                                {% csrf_token %}
-                                <div class="form-group">
-                                    {{ comment_form.content }}
-                                </div>
-                                <input type="hidden" name="parent_id" value="{{ reply.id }}">
-                                <button type="submit" class="btn btn-primary btn-sm">Submit Reply</button>
-                            </form>
-                        </div>
-                        {% endfor %}
-
-                        <div class="reply-form mt-2" id="reply-form-{{ comment.id }}" style="display: none;">
-                            <form method="POST" action="{% url 'article_detail' article.id %}">
-                                {% csrf_token %}
-                                <div class="form-group">
-                                    {{ comment_form.content }}
-                                </div>
-                                <input type="hidden" name="parent_id" value="{{ comment.id }}">
-                                <button type="submit" class="btn btn-primary btn-sm">Submit Reply</button>
-                            </form>
-                        </div>
-                    </div>
+                    {% include 'comment.html' with comment=comment %}
                 {% endfor %}
             </div>
 
             <h4 class="mt-4">Add a comment</h4>
-            <form method="POST" action="{% url 'article_detail' article.id %}">
+            <form method="POST" action="{% url 'article_detail' article.id %}" id="main-comment-form">
                 {% csrf_token %}
-                <div class="form-group">
-                    {{ comment_form.content }}
-                </div>
+                {{ comment_form.as_p }}
                 <button type="submit" class="btn btn-primary">Submit</button>
             </form>
         </div>
@@ -113,6 +89,28 @@
                 $('#reply-form-' + commentId).toggle();
             });
         });
+        function showReplyForm(parentId) {
+            const existingForm = document.getElementById('reply-form-' + parentId);
+            if (!existingForm) {
+                const parentDiv = document.getElementById('comment-' + parentId);
+                const replyForm = document.createElement('form');
+                replyForm.setAttribute('method', 'POST');
+                replyForm.setAttribute('action', '{% url "article_detail" article.id %}');
+                replyForm.classList.add('reply-form');
+                replyForm.innerHTML = `
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <textarea name="content" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <input type="hidden" name="parent_id" value="${parentId}">
+                    <button type="submit" class="btn btn-primary btn-sm">Reply</button>
+                `;
+                parentDiv.appendChild(replyForm);
+                replyForm.style.display = 'block';
+            } else {
+                existingForm.style.display = 'block';
+            }
+        }
     </script>
 </body>
 </html>

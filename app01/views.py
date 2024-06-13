@@ -107,11 +107,35 @@ def article_content(request, article_id):
         return JsonResponse({'error': 'Article not found'}, status=404)
 
 
+# def article_detail(request, article_id):
+#     article = get_object_or_404(Article, id=article_id)
+#     comments = article.comments.filter(parent__isnull=True)
+#
+#     if request.method == 'POST':
+#         comment_form = CommentForm(request.POST)
+#         if comment_form.is_valid():
+#             new_comment = comment_form.save(commit=False)
+#             new_comment.article = article
+#             new_comment.author = request.user
+#             parent_id = request.POST.get('parent_id')
+#             if parent_id:
+#                 new_comment.parent = Comment.objects.get(id=parent_id)
+#             new_comment.save()
+#             return redirect('article_detail', article_id=article.id)
+#     else:
+#         comment_form = CommentForm()
+#
+#     return render(request, 'article_detail.html', {
+#         'article': article,
+#         'comments': comments,
+#         'comment_form': comment_form
+#     })
+
 def article_detail(request, article_id):
     article = get_object_or_404(Article, id=article_id)
-    comments = article.comments.filter(parent__isnull=True)
+    comments = Comment.objects.filter(article=article, parent__isnull=True).order_by('-publish_time')
 
-    if request.method == 'POST':
+    if request.method == "POST":
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
             new_comment = comment_form.save(commit=False)
@@ -119,7 +143,8 @@ def article_detail(request, article_id):
             new_comment.author = request.user
             parent_id = request.POST.get('parent_id')
             if parent_id:
-                new_comment.parent = Comment.objects.get(id=parent_id)
+                parent_comment = Comment.objects.get(id=parent_id)
+                new_comment.parent = parent_comment
             new_comment.save()
             return redirect('article_detail', article_id=article.id)
     else:
@@ -128,7 +153,7 @@ def article_detail(request, article_id):
     return render(request, 'article_detail.html', {
         'article': article,
         'comments': comments,
-        'comment_form': comment_form
+        'comment_form': comment_form,
     })
 
 
