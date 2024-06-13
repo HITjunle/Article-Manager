@@ -82,22 +82,20 @@
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
-        $(document).ready(function(){
-            $('.reply-btn').click(function(){
-                var commentId = $(this).data('comment-id');
-                console.log(commentId);
-                $('#reply-form-' + commentId).toggle();
-            });
-        });
         function showReplyForm(parentId) {
-            const existingForm = document.getElementById('reply-form-' + parentId);
-            if (!existingForm) {
+            const replyForm = document.getElementById('reply-form-' + parentId);
+            if (replyForm) {
+                // If the form already exists, toggle its visibility
+                replyForm.style.display = (replyForm.style.display === 'none' || replyForm.style.display === '') ? 'block' : 'none';
+            } else {
+                // Create a new reply form
                 const parentDiv = document.getElementById('comment-' + parentId);
-                const replyForm = document.createElement('form');
-                replyForm.setAttribute('method', 'POST');
-                replyForm.setAttribute('action', '{% url "article_detail" article.id %}');
-                replyForm.classList.add('reply-form');
-                replyForm.innerHTML = `
+                const newReplyForm = document.createElement('form');
+                newReplyForm.setAttribute('method', 'POST');
+                newReplyForm.setAttribute('action', '{% url "article_detail" article.id %}');
+                newReplyForm.classList.add('reply-form');
+                newReplyForm.setAttribute('id', 'reply-form-' + parentId);
+                newReplyForm.innerHTML = `
                     {% csrf_token %}
                     <div class="form-group">
                         <textarea name="content" class="form-control" rows="3" required></textarea>
@@ -105,10 +103,8 @@
                     <input type="hidden" name="parent_id" value="${parentId}">
                     <button type="submit" class="btn btn-primary btn-sm">Reply</button>
                 `;
-                parentDiv.appendChild(replyForm);
-                replyForm.style.display = 'block';
-            } else {
-                existingForm.style.display = 'block';
+                parentDiv.appendChild(newReplyForm);
+                newReplyForm.style.display = 'block';
             }
         }
     </script>
